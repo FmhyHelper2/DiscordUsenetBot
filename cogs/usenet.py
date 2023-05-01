@@ -241,7 +241,7 @@ class UsenetHelper:
         response = await self.client.post(self.SABNZBD_API, params=params)
         return response.json()
       
-    async def add_nzburl(self, nzburl, category):
+    async def add_nzburlcat(self, nzburl, category):
         params = {"mode": "addurl", "name": nzburl, "cat": category}
         response = await self.client.post(self.SABNZBD_API, params=params)
         return response.json()
@@ -519,7 +519,7 @@ class Usenet(commands.Cog):
             response = requests.get(nzburl)
             if "Content-Disposition" in response.headers:
                 if is_tv_pack:
-                    result2 = await self.usenetbot.add_nzburl(nzburl, "tv_packs")
+                    result2 = await self.usenetbot.add_nzburlcat(nzburl, "tv_packs")
                 else:
                     result2 = await self.usenetbot.add_nzburl(nzburl)
                 logger.info(f'[GET] {ctx.author.name} ({ctx.author.id}) added nzb id ({id}) which resulted in {"success" if result2["status"] else "failure"} | {result2} | 2')   
