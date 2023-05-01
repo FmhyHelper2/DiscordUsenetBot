@@ -240,7 +240,11 @@ class UsenetHelper:
         params = {"mode": "addurl", "name": nzburl}
         response = await self.client.post(self.SABNZBD_API, params=params)
         return response.json()
-
+      
+    async def add_nzburl(self, nzburl, category):
+        params = {"mode": "addurl", "name": nzburl, "cat": category}
+        response = await self.client.post(self.SABNZBD_API, params=params)
+        return response.json()
 
     async def clear_progresstask(self, status_message, msg_id,**kwargs):
         """remove job, delete message and clear dictionary of progress bar."""
@@ -499,6 +503,10 @@ class Usenet(commands.Cog):
             return await ctx.send("Please provide a proper ID.")
         replymsg = await ctx.reply("Adding your requested ID(s). Please Wait...", mention_author=False)
         success_taskids = []
+        is_tv_pack = False
+        if nzbhydra_idlist[0] == "-p":
+            is_tv_pack = True
+            nzbhydra_idlist.remove("-p")
         for id in nzbhydra_idlist:
             # Make sure that we are getting a number and not letters..
             if id.startswith("-"):
@@ -510,7 +518,10 @@ class Usenet(commands.Cog):
             nzburl = NZBHYDRA_URL_ENDPOINT.replace("replace_id", id)
             response = requests.get(nzburl)
             if "Content-Disposition" in response.headers:
-                result2 = await self.usenetbot.add_nzburl(nzburl)
+                if is_tv_pack:
+                    result2 = await self.usenetbot.add_nzburl(nzburl, "tv_packs")
+                else:
+                    result2 = await self.usenetbot.add_nzburl(nzburl)
                 logger.info(f'[GET] {ctx.author.name} ({ctx.author.id}) added nzb id ({id}) which resulted in {"success" if result2["status"] else "failure"} | {result2} | 2')   
                 if result2["status"]:
                     success_taskids.append(result2["nzo_ids"][0])
