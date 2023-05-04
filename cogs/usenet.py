@@ -124,7 +124,9 @@ class UsenetHelper:
                         status_embed.description += f"**Speed: **{speed} **ETA: **{eta}\n\n\n"
                     else:
                         status_embed.description += f"**Action:** ```\n{action.strip()}\n```\n\n"
-
+                if action and "Unpacking" in action:
+                    status_embed.description += f"**Status: ** Unpacking\n"
+                
                 if index == 4 and len(postprocessing_queue_list) > 4:
                     status_embed.description+= f"\n**+ Extra Queued Task...**\n\n"
                     break
