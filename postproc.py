@@ -49,18 +49,24 @@ except:
 LOGFILE_PATH = "/home/master/.config/sabnzbd/logs/sabnzbd.log"
 
 #Rclone upload directory and flags.  
-RCLONE_REMOTE_NAME = ""
+RCLONE_REMOTE_NAME = "fc_contrib"
 RCLONE_DIRECTORY_NAME = "UsenetUpload/NoSort"  # leave empty if there isn't one.
 if category == "movies":
     RCLONE_DIRECTORY_NAME = "UsenetUpload/Movies"
-elif category == "tv":
+elif category == "tv" or category == "tv_packs":
     RCLONE_DIRECTORY_NAME = "UsenetUpload/TV"
 RCLONE_UPLOAD_DIRECTORY = directory.split("/")[-1]
 if category == "tv":
     RCLONE_UPLOAD_DIRECTORY = f'{directory.split("/")[-2]}/{directory.split("/")[-1]}'
 DRIVE_UPLOAD_DIRECTORY = f"{RCLONE_REMOTE_NAME}:{RCLONE_DIRECTORY_NAME}/{RCLONE_UPLOAD_DIRECTORY}"
 
-rclone_command = f"gclone copy -v --stats=1s --stats-one-line --drive-chunk-size=256M --fast-list --transfers=1 --exclude _UNPACK_*/** --exclude _FAILED_*/** --exclude *.rar --exclude *.par2 \"{directory}\" \"{DRIVE_UPLOAD_DIRECTORY}\" "
+no_of_transfers = 1
+drive_chunk_size = 256
+if category == "tv_packs":
+    no_of_transfers = 4
+    drive_chunk_size = 64
+
+rclone_command = f"gclone copy -v --stats=1s --stats-one-line --drive-chunk-size={drive_chunk_size}M --fast-list --transfers={no_of_transfers} --exclude _UNPACK_*/** --exclude _FAILED_*/** --exclude *.rar \"{directory}\" \"{DRIVE_UPLOAD_DIRECTORY}\" "
 
 logging.basicConfig(
     level=logging.INFO,
@@ -107,8 +113,8 @@ def webhook_notification(message:str):
         "content": message,
         "embeds": None,
         "attachments": [],
-	"username": "",
-    	"avatar_url": ""
+	      "username": "",
+    	  "avatar_url": ""
     }
     headers = {
         'Content-Type': 'application/json'
@@ -122,62 +128,7 @@ def webhook_notification(message:str):
     print("Something happened.....")
     sys.exit(1)
 
-def webhook_notification_embed(message:str,**kwargs):
-    if kwargs.get('primitive'):
-        data = {
-            "content": message,
-            "embeds": None,
-            "attachments": []
-        }
-    else:
-        now = datetime.datetime.now(datetime.timezone.utc)
-        time_str = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        data = {
-    "content": None,
-    "embeds": [
-        {
-        "title": "New Upload !!!",
-        "description": f"**{kwargs.get('filename')}** has been uploaded to drive.",
-        "color": 3066993,
-        "fields": [  
-            {
-            "name": "Size",
-            "value": f"**{kwargs.get('file_size')}**"
-            },
-            {
-            "name": "Location",
-            "value": "****"     ## TODO: UPLOAD LOCATION
-            }
-        ],
-        "timestamp": f"{time_str}"
-        }
-    ],
-    "username": "",
-    "avatar_url": "",
-    "attachments": []
-    }
-    
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    
-    response:requests.Response = requests.post(DISCORD_NOTIFICATION_WEBHOOK_URL,headers=headers,json=data)
-
-    if response.status_code == 204:
-        sys.exit(0)
-    else:
-        if not kwargs.get('primitive'):
-            data.pop("timestamp")
-            response:requests.Response = requests.post(DISCORD_NOTIFICATION_WEBHOOK_URL,headers=headers,json=data)
-            if response.status_code == 204:
-                sys.exit(0)
-
-
-    print("Something happened.....")
-    sys.exit(1)
-
-
-def run_command(command) -> bool:
+def run_command(command):
     with subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True
     ) as proc:
@@ -191,9 +142,8 @@ def run_command(command) -> bool:
                 LOGGER(__name__).info(f"Uploading to drive: {output}")
 
             if output == "" and proc.poll() is not None:
-                return True
-            else: 
-                return False
+                LOGGER(__name__).info("File has been successfully uploaded to gdrive.")
+                break
 
 
 if re.search(r"(http|https)", jobname):
@@ -206,7 +156,6 @@ reasons = {
     "3": "Failed unpack / verification",
 }
 
-LOGGER(__name__).info(f"postprocstatus: {postprocstatus}")
 
 if str(postprocstatus) in reasons:
     reason = reasons[postprocstatus]
@@ -215,51 +164,47 @@ if str(postprocstatus) in reasons:
     sys.exit(1)
 
 
-gclone_status = run_command(rclone_command)
+run_command(rclone_command)
 
-if gclone_status:
-    LOGGER(__name__).info("File has been successfully uploaded to gdrive.")
-    # deleting file from local drive.
-    contains_prefix = False
-    prefix = "_UNPACK_"
-    for folder_name in os.listdir(directory):
-        if folder_name.startswith(prefix) and os.path.isdir(os.path.join(directory, folder_name)):
-            LOGGER(__name__).info(f"Folder starting with {prefix} found: {folder_name}")
-            contains_prefix = True
-        else:
-            path = os.path.join(directory, folder_name)
-            if os.path.isfile(path):
-                os.unlink(path)
-                LOGGER(__name__).info(f"File deleted: {path}")
-            elif os.path.isdir(path):
-                shutil.rmtree(path)
-                LOGGER(__name__).info(f"Directory deleted: {path}")
+# deleting file from local drive.
+contains_prefix = False
+prefix = "_UNPACK_"
+for folder_name in os.listdir(directory):
+    if folder_name.startswith(prefix) and os.path.isdir(os.path.join(directory, folder_name)):
+        LOGGER(__name__).info(f"Folder starting with {prefix} found: {folder_name}")
+        contains_prefix = True
+    else:
+        path = os.path.join(directory, folder_name)
+        if os.path.isfile(path):
+            os.unlink(path)
+            LOGGER(__name__).info(f"File deleted: {path}")
+        elif os.path.isdir(path):
+            shutil.rmtree(path)
+            LOGGER(__name__).info(f"Directory deleted: {path}")
 
-    if not contains_prefix:
-      shutil.rmtree(directory)
-      LOGGER(__name__).info(f"Directory deleted: {directory}")
-    try:
-        file_size = os.environ["SAB_BYTES_DOWNLOADED"]
-        file_size = get_readable_bytes(int(file_size))
-    except:
-        file_size = "N/A"
+if not contains_prefix:
+  shutil.rmtree(directory)
+  LOGGER(__name__).info(f"Directory deleted: {directory}")
+try:
+    file_size = os.environ["SAB_BYTES_DOWNLOADED"]
+    file_size = get_readable_bytes(int(file_size))
+except:
+    file_size = "N/A"
 
 
-    drive_link = ""
-    if SHOW_DRIVE_LINK:
-        drive_link = subprocess.check_output(
-            ["rclone", "link", f"{DRIVE_UPLOAD_DIRECTORY}"]).decode("utf-8")
+drive_link = ""
+if SHOW_DRIVE_LINK:
+    drive_link = subprocess.check_output(
+        ["rclone", "link", f"{DRIVE_UPLOAD_DIRECTORY}"]).decode("utf-8")
 
-        if "drive.google.com" not in drive_link:
-            drive_link = "Something went wrong!"
+    if "drive.google.com" not in drive_link:
+        drive_link = "Something went wrong!"
 
-        print(drive_link)
-        drive_link = f'[Drive Link]({encode_link(drive_link,"SecretBot")})'
+    print(drive_link)
+    drive_link = f'[Drive Link]({encode_link(drive_link,"SecretBot")})'
 
 
-    notification_message = (
-        f"`📁 {jobname}`\n\n{file_size} | Success |{drive_link}")
+notification_message = (
+    f"`📁 {jobname}`\n\n{file_size} | Success |{drive_link}")
 
-    webhook_notification(message=notification_message)
-else:
-    LOGGER(__name__).info("File failed to upload file to drive.")
+webhook_notification(message=notification_message)

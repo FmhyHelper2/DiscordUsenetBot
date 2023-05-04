@@ -91,35 +91,28 @@ class UsenetHelper:
                                             f"**Task ID:** `{queue['nzo_id']}`\n━━━━━━━━━━━━━━━━━━━━\n"
 
                 if index == 4 and len(downloading_queue_list) > 4:
-
                     status_embed.description += f"**+ {max(len(downloading_queue_list)-4, 0)} Ongoing Tasks...**\n\n"
                     break
 
-
-
         if postprocessing_queue_list:
-
             if status_embed.description not in ['',None]:
                 status_embed.description += '━━━━━━━━━━━━━━━━━━━━\n'
-
             status_embed.description += "**Post Processing -**\n\n"
             for index, history in enumerate(postprocessing_queue_list):
-
                 file_name = history["name"]
                 if re.search(r"(http|https)", file_name):
                     file_name = "N/A"
-
-                
+                    
                 status_embed.description += f"**🗂 FileName :** `{file_name}`\n" \
                                             f"**Status :** `{history['status']}`\n"
 
                 action = history.get("action_line")
                 if isinstance(action, list):
-                    status_embed.description += f"**Action :** ```\n{action[0]}\n```\n"
+                    status_embed.description += f"**Action :** ```\n{action[0]}\n```\n\n"
 
                 if action and "Running script:" in action:
                     action = action.replace("Running script:", "")
-                    status_embed.description += f"**Action :** ```\n{action.strip()}\n```\n"
+                    status_embed.description += f"**Action :** ```\n{action.strip()}\n```\n\n"
 
                 if index == 4 and len(postprocessing_queue_list) > 4:
                     status_embed.description+= f"\n**+ Extra Queued Task...**\n\n"
