@@ -104,15 +104,26 @@ class UsenetHelper:
                     file_name = "N/A"
                     
                 status_embed.description += f"**🗂 FileName :** `{file_name}`\n" \
-                                            f"**Status :** `{history['status']}`\n"
+                                            f"**Status :** {history['status']}\n"
 
                 action = history.get("action_line")
                 if isinstance(action, list):
                     status_embed.description += f"**Action :** ```\n{action[0]}\n```\n\n"
-
+                    
                 if action and "Running script:" in action:
                     action = action.replace("Running script:", "")
-                    status_embed.description += f"**Action :** ```\n{action.strip()}\n```\n\n"
+                    # Uploading to drive: 4.270 GiB / 11.337 GiB, 38%, 20.453 MiB/s, ETA 5m53s
+                    speed_pattern = r"((\d+\.\d+) ([KMG]?i?B)/s)"
+                    eta_pattern = r"ETA ((\d+h)?(\d+m)?(\d+s)?)"
+                    
+                    speed_match = re.search(speed_pattern, action)
+                    eta_match = re.search(eta_pattern, action)
+                    if speed_match and eta_match:
+                        speed = speed_match.group(0)
+                        eta = eta_match.group(0)
+                        status_embed.description += f"**Speed:**{speed} **ETA:**{eta}\n"
+                    else:
+                        status_embed.description += f"**Action:** ```\n{action.strip()}\n```\n\n"
 
                 if index == 4 and len(postprocessing_queue_list) > 4:
                     status_embed.description+= f"\n**+ Extra Queued Task...**\n\n"
