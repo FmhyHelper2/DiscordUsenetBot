@@ -40,10 +40,10 @@ NZBHYDRA_STATS_ENDPOINT = f"{HYDRA_URL}/api/stats?apikey={HYDRA_API_KEY}"
 
 def check_before_starting(service):
     if service.lower() == 'sabnzbd':
-        response = requests.get(SABNZBD_ENDPOINT, timeout=3)
+        response = requests.get(SABNZBD_ENDPOINT, timeout=20)
         response.raise_for_status()
     elif service.lower() == 'nzbhydra':
-        response = requests.get(NZBHYDRA_ENDPOINT, timeout=10)
+        response = requests.get(NZBHYDRA_ENDPOINT, timeout=20)
         response.raise_for_status()
         if "Wrong api key" in response.text:
             raise ValueError("Wrong API value in configs.")
