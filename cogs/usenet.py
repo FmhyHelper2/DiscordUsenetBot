@@ -78,12 +78,10 @@ class UsenetHelper:
         status_embed.description = ''
 
         if downloading_queue_list:
-
-            status_embed.description = '**Downloading -**\n\n'
+            speed = downloading_response.json()["queue"]["speed"].replace(" M", "MB/s")
+            status_embed.description = f'**Downloading @ {speed}**\n\n'
 
             for index, queue in enumerate(downloading_queue_list):
-
-
                 file_name = queue["filename"]
                 if re.search(r"(http|https)", file_name):
                     file_name = "Adding file from ID."
@@ -117,16 +115,13 @@ class UsenetHelper:
 
                 action = history.get("action_line")
                 if isinstance(action, list):
-
                     status_embed.description += f"**Action :** ```\n{action[0]}\n```\n"
 
                 if action and "Running script:" in action:
                     action = action.replace("Running script:", "")
-
                     status_embed.description += f"**Action :** ```\n{action.strip()}\n```\n"
 
                 if index == 4 and len(postprocessing_queue_list) > 4:
-
                     status_embed.description+= f"\n**+ Extra Queued Task...**\n\n"
                     break
                 
@@ -533,10 +528,6 @@ class Usenet(commands.Cog):
 
         if success_taskids:
             sabnzbd_userid_log.setdefault(ctx.author.id, []).extend(success_taskids)
-            # asyncio.create_task(self.usenetbot.show_downloading_status(self.bot,ctx.channel.id,ctx.message))
-
-            # await replymsg.delete()
-            
             # This is to make sure the nzb's have been added to sabnzbd
             # TODO: Find a better way and more dynamic way to handle it.
             await asyncio.sleep(10)

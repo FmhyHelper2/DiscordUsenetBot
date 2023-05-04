@@ -85,10 +85,10 @@ class UsenetSearch(commands.Cog):
         if not output:
             output = 'Nothing found :('
         
-            await msg.edit(content=output)
+            await msg.edit(content=output, delete_after=300)
         else:
             telegraph_url = await hp.telegraph_paste(content=output[0])
-            await msg.edit(content=f'Found {output[1]} Results\n{telegraph_url}')
+            await msg.edit(content=f'Found {output[1]} Results\n{telegraph_url}', delete_after=300)
 
     # @commands.command()
     # @cog_check()
