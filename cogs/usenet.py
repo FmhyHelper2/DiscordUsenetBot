@@ -103,14 +103,14 @@ class UsenetHelper:
                 if re.search(r"(http|https)", file_name):
                     file_name = "N/A"
                     
-                status_embed.description += f"**🗂 FileName :** `{file_name}`\n" \
-                                            f"**Status :** {history['status']}\n"
-
+                status_embed.description += f"**🗂 FileName :** `{file_name}`\n"
                 action = history.get("action_line")
                 if isinstance(action, list):
+                    status_embed.description += f"**Status :** {history['status']}\n"
                     status_embed.description += f"**Action :** ```\n{action[0]}\n```\n\n"
                     
                 if action and "Running script:" in action:
+                    status_embed.description += f"**Status :** Uploading to GDrive\n"
                     action = action.replace("Running script:", "")
                     # Uploading to drive: 4.270 GiB / 11.337 GiB, 38%, 20.453 MiB/s, ETA 5m53s
                     speed_pattern = r"((\d+\.\d+) ([KMG]?i?B)/s)"
@@ -120,8 +120,8 @@ class UsenetHelper:
                     eta_match = re.search(eta_pattern, action)
                     if speed_match and eta_match:
                         speed = speed_match.group(0)
-                        eta = eta_match.group(0)
-                        status_embed.description += f"**Speed:**{speed} **ETA:**{eta}\n"
+                        eta = eta_match.group(1)
+                        status_embed.description += f"**Speed: **{speed} **ETA: **{eta}\n"
                     else:
                         status_embed.description += f"**Action:** ```\n{action.strip()}\n```\n\n"
 
