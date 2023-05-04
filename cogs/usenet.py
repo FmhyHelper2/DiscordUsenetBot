@@ -97,20 +97,20 @@ class UsenetHelper:
         if postprocessing_queue_list:
             if status_embed.description not in ['',None]:
                 status_embed.description += '━━━━━━━━━━━━━━━━━━━━\n'
-            status_embed.description += "**Post Processing -**\n\n"
+            status_embed.description += "**Post Processing**\n\n"
             for index, history in enumerate(postprocessing_queue_list):
                 file_name = history["name"]
                 if re.search(r"(http|https)", file_name):
                     file_name = "N/A"
                     
-                status_embed.description += f"**🗂 FileName :** `{file_name}`\n"
+                status_embed.description += f"**🗂 FileName: ** `{file_name}`\n"
                 action = history.get("action_line")
                 if isinstance(action, list):
-                    status_embed.description += f"**Status :** {history['status']}\n"
-                    status_embed.description += f"**Action :** ```\n{action[0]}\n```\n\n"
+                    status_embed.description += f"**Status: ** {history['status']}\n"
+                    status_embed.description += f"**Action: ** ```\n{action[0]}\n```\n\n"
                     
                 if action and "Running script:" in action:
-                    status_embed.description += f"**Status :** Uploading to GDrive\n"
+                    status_embed.description += f"**Status: ** Uploading to GDrive\n"
                     action = action.replace("Running script:", "")
                     # Uploading to drive: 4.270 GiB / 11.337 GiB, 38%, 20.453 MiB/s, ETA 5m53s
                     speed_pattern = r"((\d+\.\d+) ([KMG]?i?B)/s)"
@@ -121,7 +121,7 @@ class UsenetHelper:
                     if speed_match and eta_match:
                         speed = speed_match.group(0)
                         eta = eta_match.group(1)
-                        status_embed.description += f"**Speed: **{speed} **ETA: **{eta}\n"
+                        status_embed.description += f"**Speed: **{speed} **ETA: **{eta}\n\n\n"
                     else:
                         status_embed.description += f"**Action:** ```\n{action.strip()}\n```\n\n"
 
@@ -420,9 +420,9 @@ class Usenet(commands.Cog):
         res = await self.usenetbot.pause_task(task_id=task_id)
         logger.info(f'{ctx.author.name} ({ctx.author.id}) ran pause command for {task_id} which resulted in {"success" if res else "failure"}')
         if res:
-            await ctx.reply(f'Successfully paused task with task id : `{task_id}`',mention_author=False)
+            await ctx.reply(f'Successfully paused task with task id: `{task_id}`',mention_author=False)
         else:
-            await ctx.reply(f'No task found with task id : `{task_id}`',mention_author=False)
+            await ctx.reply(f'No task found with task id: `{task_id}`',mention_author=False)
 
 
     @commands.command()
@@ -441,9 +441,9 @@ class Usenet(commands.Cog):
         res = await self.usenetbot.resume_task(task_id=task_id)
         logger.info(f'{ctx.author.name} ({ctx.author.id}) ran resume command for {task_id} which resulted in {"success" if res else "failure"}')
         if res:
-            await ctx.reply(f'Successfully resumed task with task id : `{task_id}`',mention_author=False)
+            await ctx.reply(f'Successfully resumed task with task id: `{task_id}`',mention_author=False)
         else:
-            await ctx.reply(f'No task found with task id : `{task_id}`',mention_author=False)
+            await ctx.reply(f'No task found with task id: `{task_id}`',mention_author=False)
 
     @commands.command(aliases=['cancel'])
     @cog_check()
@@ -461,9 +461,9 @@ class Usenet(commands.Cog):
         res = await self.usenetbot.delete_task(task_id=task_id)
         logger.info(f'{ctx.author.name} ({ctx.author.id}) ran delete command for {task_id} which resulted in {"success" if res else "failure"}')
         if res:
-            await ctx.reply(f'Successfully cancelled task with task id : `{task_id}`',mention_author=False)
+            await ctx.reply(f'Successfully cancelled task with task id: `{task_id}`',mention_author=False)
         else:
-            await ctx.reply(f'No task found with task id : `{task_id}`',mention_author=False)
+            await ctx.reply(f'No task found with task id: `{task_id}`',mention_author=False)
 
     @commands.command()
     @cog_check()
