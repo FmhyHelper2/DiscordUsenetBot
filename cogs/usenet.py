@@ -109,7 +109,7 @@ class UsenetHelper:
                     status_embed.description += f"**Status: ** {history['status']}\n"
                     status_embed.description += f"**Action: ** ```\n{action[0]}\n```\n\n"
                     
-                if action and "Running script:" in action:
+                elif action and "Running script:" in action:
                     status_embed.description += f"**Status: ** Uploading to GDrive\n"
                     action = action.replace("Running script:", "")
                     # Uploading to drive: 4.270 GiB / 11.337 GiB, 38%, 20.453 MiB/s, ETA 5m53s
@@ -124,9 +124,11 @@ class UsenetHelper:
                         status_embed.description += f"**Speed: **{speed} **ETA: **{eta}\n\n\n"
                     else:
                         status_embed.description += f"**Action:** ```\n{action.strip()}\n```\n\n"
-                if action and "Unpacking" in action:
+                elif action and "Unpacking" in action:
                     status_embed.description += f"**Status: ** Unpacking\n"
-                
+                else: 
+                    status_embed.description += f"**Status: ** {history['status']}\n"
+                    
                 if index == 4 and len(postprocessing_queue_list) > 4:
                     status_embed.description+= f"\n**+ Extra Queued Task...**\n\n"
                     break
