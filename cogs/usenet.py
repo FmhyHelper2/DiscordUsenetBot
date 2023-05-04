@@ -121,7 +121,7 @@ class UsenetHelper:
                     if speed_match and eta_match:
                         speed = speed_match.group(0)
                         eta = eta_match.group(1)
-                        status_embed.description += f"**Speed: **{speed} **ETA: **{eta}\n\n\n"
+                        status_embed.description += f"**Speed: **{speed} **ETA: **{eta}\n\n"
                     else:
                         status_embed.description += f"**Action:** ```\n{action.strip()}\n```\n\n"
                 elif action and "Unpacking" in action:
