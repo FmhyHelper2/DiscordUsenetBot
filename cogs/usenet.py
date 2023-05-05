@@ -86,7 +86,7 @@ class UsenetHelper:
                 file_name = queue["filename"]
                 if re.search(r"(http|https)", file_name):
                     file_name = "Adding file from ID."
-                status_embed.description += f'**🗂 FileName:** `{file_name}`\n\n{self.show_progress_still(int(queue["percentage"]))} {queue["percentage"]}%\n\n' \
+                status_embed.description += f'**🗂 FileName:** `{file_name}`\n{self.show_progress_still(int(queue["percentage"]))} {queue["percentage"]}%\n' \
                                             f"**{queue['sizeleft']}** remaining of **{queue['size']}**\n" \
                                             f"**Status:** {queue['status']} | **ETA:** {queue['timeleft']}\n" \
                                             f"**Task ID:** `{queue['nzo_id']}`\n━━━━━━━━━━━━━━━━━━━━\n"
