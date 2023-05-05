@@ -46,7 +46,8 @@ class UsenetHelper:
         hashblocks = round((int_percent*width/100)-1)
         if hashblocks<0:
             hashblocks = 0
-        return "#️⃣"* hashblocks + "▶️" + "🟦"*(width-hashblocks-1) + "🏁"
+        return "▰" * hashblocks + "▱" * (width-hashblocks-1)
+        # return "#️⃣"* hashblocks + "▶️" + "🟦"*(width-hashblocks-1) + "🏁"
 
     async def downloading_status_page(self):
         """Generate status page for progress message."""

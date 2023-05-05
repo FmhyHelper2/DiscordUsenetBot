@@ -43,7 +43,7 @@ class UsenetSearch(commands.Cog):
             cmd = 'nzbfind'
         cmd = cmd.lower()
         if not user_input: return await ctx.send(f'No search term provided. Correct Usage: `{ctx.prefix}search command your query` where command can be: `{" , ".join(commands)}`')
-        msg = await ctx.send(f'Searching for `{user_input}`\nPlease wait')
+        msg = await ctx.send(f'Searching for `{user_input}`\nPlease wait', delete_after=300)
         output=None
         if cmd in ["nzbfind", "nzbsearch"]:
             logger.info(f'{ctx.author.name} ({ctx.author.id}) did a nzbfind for {user_input}')
