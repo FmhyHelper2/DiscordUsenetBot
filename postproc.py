@@ -66,7 +66,8 @@ if category == "tv_packs":
     no_of_transfers = 4
     drive_chunk_size = 64
 
-rclone_command = f"gclone copy -v --stats=1s --stats-one-line --drive-chunk-size={drive_chunk_size}M --fast-list --transfers={no_of_transfers} --exclude _UNPACK_*/** --exclude _FAILED_*/** --exclude *.rar \"{directory}\" \"{DRIVE_UPLOAD_DIRECTORY}\" "
+regex_rXX = "{{r\d{2}}}"
+rclone_command = f"gclone copy -v --stats=1s --stats-one-line --drive-chunk-size={drive_chunk_size}M --fast-list --transfers={no_of_transfers} --exclude _UNPACK_*/** --exclude _FAILED_*/** --exclude *.rar --exclude *.par2 --exclude *.{regex_rXX} \"{directory}\" \"{DRIVE_UPLOAD_DIRECTORY}\" "
 
 logging.basicConfig(
     level=logging.INFO,

@@ -126,9 +126,9 @@ class UsenetHelper:
                     else:
                         status_embed.description += f"**Action:** ```\n{action.strip()}\n```\n\n"
                 elif action and "Unpacking" in action:
-                    status_embed.description += f"**Status: ** Unpacking\n"
+                    status_embed.description += f"**Status: ** Unpacking\n\n"
                 else: 
-                    status_embed.description += f"**Status: ** {history['status']}\n"
+                    status_embed.description += f"**Status: ** {history['status']}\n\n"
                     
                 if index == 4 and len(postprocessing_queue_list) > 4:
                     status_embed.description+= f"\n**+ Extra Queued Task...**\n\n"
