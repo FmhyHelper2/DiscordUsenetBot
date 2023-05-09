@@ -39,7 +39,7 @@ async def on_command_error(ctx:commands.Context,error):
         _file=None
         if os.path.exists('log.txt'):
             _file = discord.File('log.txt')
-        user = await bot.get_user(f'{cogs._config.SUDO_USERIDS[0]}')
+        user = await bot.fetch_user(f'{cogs._config.SUDO_USERIDS[0]}')
         await user.send(embed=embed(f'Error | {ctx.command.name}',f'An error occured.\n```py\n{error}\n```\nHere is the attached logfile.')[0],file=_file)
         await ctx.send(content="An error occured. \nReport sent to sudo user.")
 
