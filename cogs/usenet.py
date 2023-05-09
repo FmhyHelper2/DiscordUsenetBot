@@ -332,7 +332,7 @@ class UsenetHelper:
         scheduler.add_job(
             edit_status_message,
             "interval",
-            seconds=10,
+            seconds=5,
             misfire_grace_time=15,
             max_instances=2,
             id=f"{str(message.id)}")
@@ -507,9 +507,9 @@ class Usenet(commands.Cog):
             return await ctx.send("Please provide a proper ID.")
         replymsg = await ctx.reply("Adding your requested ID(s). Please Wait...", mention_author=False)
         success_taskids = []
-        is_tv_pack = False
+        is_pack = False
         if nzbhydra_idlist[0] == "-p":
-            is_tv_pack = True
+            is_pack = True
             nzbhydra_idlist.remove("-p")
         for id in nzbhydra_idlist:
             # Make sure that we are getting a number and not letters..
@@ -522,8 +522,8 @@ class Usenet(commands.Cog):
             nzburl = NZBHYDRA_URL_ENDPOINT.replace("replace_id", id)
             response = requests.get(nzburl)
             if "Content-Disposition" in response.headers:
-                if is_tv_pack:
-                    result2 = await self.usenetbot.add_nzburlcat(nzburl, "tv_packs")
+                if is_pack:
+                    result2 = await self.usenetbot.add_nzburlcat(nzburl, "pack")
                 else:
                     result2 = await self.usenetbot.add_nzburl(nzburl)
                 logger.info(f'[GET] {ctx.author.name} ({ctx.author.id}) added nzb id ({id}) which resulted in {"success" if result2["status"] else "failure"} | {result2} | 2')   
