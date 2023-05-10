@@ -52,7 +52,9 @@ async def ping(ctx):
 @bot.command(description='logfile')
 async def log(ctx):
     if os.path.exists('log.txt'):
-        await ctx.send(embed=embed('📃 Log File','Here is the log file')[0],file=discord.File('log.txt'))
+        user = await bot.fetch_user(f'{cogs._config.SUDO_USERIDS[0]}')
+        await user.send(embed=embed('📃 Log File','Here is the log file')[0],file=discord.File('log.txt'))
+        await ctx.send(content="Log file sent successfully to sudo dm!")
     else:
         await ctx.send(embed=embed('📃 Log File','No logfile found :(')[0])
 

@@ -111,7 +111,7 @@ class UsenetHelper:
                     status_embed.description += f"**Action: ** ```\n{action[0]}\n```\n\n"
                     
                 elif action and "Running script:" in action:
-                    status_embed.description += f"**Status: ** Uploading to GDrive\n"
+                    status_embed.description += f"**Status: ** *Uploading to GDrive*\n"
                     action = action.replace("Running script:", "")
                     # Uploading to drive: 4.270 GiB / 11.337 GiB, 38%, 20.453 MiB/s, ETA 5m53s
                     speed_pattern = r"((\d+\.\d+) ([KMG]?i?B)/s)"
@@ -123,12 +123,14 @@ class UsenetHelper:
                         speed = speed_match.group(0)
                         eta = eta_match.group(1)
                         status_embed.description += f"**Speed: **{speed} **ETA: **{eta}\n\n"
+                    elif any(substring in action for substring in ["Uploading to drive", "File has been successfully", "File deleted:", "Directory deleted:"]):
+                        status_embed.description += ""
                     else:
                         status_embed.description += f"**Action:** ```\n{action.strip()}\n```\n\n"
                 elif action and "Unpacking" in action:
-                    status_embed.description += f"**Status: ** Unpacking\n\n"
+                    status_embed.description += f"**Status: ** *Unpacking files*\n\n"
                 else: 
-                    status_embed.description += f"**Status: ** {history['status']}\n\n"
+                    status_embed.description += f"**Status: ** *{history['status']}*\n\n"
                     
                 if index == 4 and len(postprocessing_queue_list) > 4:
                     status_embed.description+= f"\n**+ Extra Queued Task...**\n\n"
@@ -332,7 +334,7 @@ class UsenetHelper:
         scheduler.add_job(
             edit_status_message,
             "interval",
-            seconds=5,
+            seconds=10,
             misfire_grace_time=15,
             max_instances=2,
             id=f"{str(message.id)}")
