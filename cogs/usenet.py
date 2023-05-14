@@ -80,7 +80,7 @@ class UsenetHelper:
 
         if downloading_queue_list:
             speedString = downloading_response.json()["queue"]["speed"].replace("B", " B/s").replace("K", " KB/s").replace("M", " MB/s")
-            status_embed.description = f'**Downloading @ {speed}**\n\n'
+            status_embed.description = f'**Downloading @ {speedString}**\n\n'
 
             for index, queue in enumerate(downloading_queue_list):
                 file_name = queue["filename"]
