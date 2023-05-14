@@ -79,20 +79,25 @@ class UsenetHelper:
         status_embed.description = ''
 
         if downloading_queue_list:
-            speed = downloading_response.json()["queue"]["speed"].replace(" M", "MB/s")
+            speedString = downloading_response.json()["queue"]["speed"].replace("B", " B/s").replace("K", " KB/s").replace("M", " MB/s")
             status_embed.description = f'**Downloading @ {speed}**\n\n'
 
             for index, queue in enumerate(downloading_queue_list):
                 file_name = queue["filename"]
                 if re.search(r"(http|https)", file_name):
                     file_name = "Adding file from ID."
-                status_embed.description += f'**🗂 FileName:** `{file_name}`\n{self.show_progress_still(int(queue["percentage"]))} {queue["percentage"]}%\n' \
-                                            f"**{queue['sizeleft']}** remaining of **{queue['size']}**\n" \
-                                            f"**Status:** {queue['status']} | **ETA:** {queue['timeleft']}\n" \
-                                            f"**Task ID:** `{queue['nzo_id']}`\n━━━━━━━━━━━━━━━━━━━━\n"
-
-                if index == 4 and len(downloading_queue_list) > 4:
-                    status_embed.description += f"**+ {max(len(downloading_queue_list)-4, 0)} Ongoing Tasks...**\n\n"
+                if queue["index"] == 0:
+                    status_embed.description += f'**🗂 FileName:** `{file_name}`\n{self.show_progress_still(int(queue["percentage"]))} {queue["percentage"]}%\n' \
+                                                f"**{queue['sizeleft']}** remaining of **{queue['size']}**\n" \
+                                                f"**Status:** {queue['status']} | **ETA:** {queue['timeleft']}\n" \
+                                                f"**Task ID:** `{queue['nzo_id']}`\n━━━━━━━━━━━━━━━━━━━━\n"
+                else:
+                    status_embed.description += f'**🗂 FileName:** `{file_name}`\n' \
+                                                  f"**Status:** *Queued*\n" \
+                                                  f"**Task ID:** `{queue['nzo_id']}`\n━━━━━━━━━━━━━━━━━━━━\n"
+                # Show only first 5 items in queue
+                if index == 4 and len(downloading_queue_list) > 5:
+                    status_embed.description += f"**+ {max(len(downloading_queue_list)-5, 0)} Ongoing Tasks...**\n\n"
                     break
 
         if postprocessing_queue_list:
@@ -114,7 +119,7 @@ class UsenetHelper:
                     status_embed.description += f"**Status: ** *Uploading to GDrive*\n"
                     action = action.replace("Running script:", "")
                     # Uploading to drive: 4.270 GiB / 11.337 GiB, 38%, 20.453 MiB/s, ETA 5m53s
-                    speed_pattern = r"((\d+\.\d+) ([KMG]?i?B)/s)"
+                    speed_pattern = r"(\d+\.\d+ [KMG]?i?B\/s)"
                     eta_pattern = r"ETA ((\d+h)?(\d+m)?(\d+s)?)"
                     
                     speed_match = re.search(speed_pattern, action)
@@ -123,7 +128,7 @@ class UsenetHelper:
                         speed = speed_match.group(0)
                         eta = eta_match.group(1)
                         status_embed.description += f"**Speed: **{speed} **ETA: **{eta}\n\n"
-                    elif any(substring in action for substring in ["Uploading to drive", "File has been successfully", "File deleted:", "Directory deleted:"]):
+                    elif any(substring in action for substring in ["Uploading to drive", "File has been successfully", "File deleted:", "Directory deleted:", ".py"]):
                         status_embed.description += ""
                     else:
                         status_embed.description += f"**Action:** ```\n{action.strip()}\n```\n\n"
@@ -525,12 +530,12 @@ class Usenet(commands.Cog):
             response = requests.get(nzburl)
             if "Content-Disposition" in response.headers:
                 if is_pack:
-                    result2 = await self.usenetbot.add_nzburlcat(nzburl, "pack")
+                    result = await self.usenetbot.add_nzburlcat(nzburl, "pack")
                 else:
-                    result2 = await self.usenetbot.add_nzburl(nzburl)
-                logger.info(f'[GET] {ctx.author.name} ({ctx.author.id}) added nzb id ({id}) which resulted in {"success" if result2["status"] else "failure"} | {result2} | 2')   
-                if result2["status"]:
-                    success_taskids.append(result2["nzo_ids"][0])
+                    result = await self.usenetbot.add_nzburl(nzburl)
+                logger.info(f'[GET] {ctx.author.name} ({ctx.author.id}) added nzb id ({id}) which resulted in {"success" if result["status"] else "failure"} | {result} | 2')   
+                if result["status"]:
+                    success_taskids.append(result["nzo_ids"][0])
             elif 'Retry-After' in response.headers:
                 logger.info(f'{ctx.author.name} ({ctx.author.id}) added nzb id ({id}) which resulted in failure due getting Retry-After.')
                 await ctx.send(f'Unable to add {id} , got a retry after message. Retry after {str(response.headers.get("Retry-After"))} seconds <t:{round(datetime.datetime.now().timestamp()+int(response.headers.get("Retry-After")))}:R>')
@@ -542,7 +547,6 @@ class Usenet(commands.Cog):
             # This is to make sure the nzb's have been added to sabnzbd
             # TODO: Find a better way and more dynamic way to handle it.
             await asyncio.sleep(10)
-            
             file_names = await self.usenetbot.get_file_names(success_taskids)
             logger.info(f'file_names={file_names}')
             formatted_file_names = "\n".join(["`" + s + "`" for s in file_names])
