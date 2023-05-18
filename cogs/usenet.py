@@ -511,11 +511,8 @@ class Usenet(commands.Cog):
                 continue
             reply_msg = await ctx.reply('Adding nzb file(s) please wait....', mention_author=False)
             await nzb_file.save(fp=f'nzbfiles/{nzb_file.filename}')
-
-            if is_pack:
-                res = await self.usenetbot.add_nzbfile(f'nzbfiles/{nzb_file.filename}', sabnzbd_pack_category)
-            else:
-                res = await self.usenetbot.add_nzbfile(f'nzbfiles/{nzb_file.filename}')
+            
+            res = await self.usenetbot.add_nzbfile(f'nzbfiles/{nzb_file.filename}',sabnzbd_pack_category if is_pack else None, password)
             logger.info(f'{ctx.author.name} ({ctx.author.id}) added nzb file ({nzb_file.filename}) which resulted in {"success" if res["status"] else "failure"}')
             if res['status']:
                 any_one_added = True
@@ -554,10 +551,7 @@ class Usenet(commands.Cog):
             nzburl = NZBHYDRA_URL_ENDPOINT.replace("replace_id", id)
             response = requests.get(nzburl)
             if "Content-Disposition" in response.headers:
-                if is_pack:
-                    result = await self.usenetbot.add_nzburl(nzburl, sabnzbd_pack_category)
-                else:
-                    result = await self.usenetbot.add_nzburl(nzburl)
+                result = await self.usenetbot.add_nzburl(nzburl, sabnzbd_pack_category if is_pack else None)
                 logger.info(f'[GET] {ctx.author.name} ({ctx.author.id}) added nzb id ({id}) which resulted in {"success" if result["status"] else "failure"} | {result} | 2')   
                 if result["status"]:
                     success_taskids.append(result["nzo_ids"][0])
