@@ -88,7 +88,7 @@ async def katbin_paste(text: str) -> str:
     except:
         return "something went wrong while pasting text in katb.in."
 
-async def telegraph_paste(content: str, title="Discord Usenet Bot") -> str:
+async def telegraph_paste(content: str, title="FC Usenet Bot") -> str:
     """
     paste the text in telegra.ph (graph.org) website (text should follow proper html tags).
     """
@@ -99,7 +99,7 @@ async def telegraph_paste(content: str, title="Discord Usenet Bot") -> str:
     html_content = content.replace("\n", "<br>")
     try:
         response = await telegraph.create_page(
-            title="Discord Usenet Bot search result -", html_content=html_content)
+            title="FC Usenet search result -", html_content=html_content, author_name="FLIGHTCLUB")
         response = response["url"]
     except:
         response = await katbin_paste(content)

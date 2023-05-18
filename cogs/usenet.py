@@ -16,6 +16,7 @@ from cachetools import TTLCache
 import asyncio
 
 downloading_status_msgids = {} 
+sabnzbd_pack_category = "pack"
 sabnzbd_userid_log = TTLCache(maxsize=128, ttl=600)
 
 class UsenetHelper:
@@ -237,7 +238,7 @@ class UsenetHelper:
         response = response.json()
         return response["status"]
 
-    async def add_nzbfile(self, path_name):
+    async def add_nzbfile(self, path_name, category: str=None, password: str=None):
         try:
             async with aiofiles.open(path_name, "rb") as file:
                 nzb_content = await file.read()
@@ -246,18 +247,20 @@ class UsenetHelper:
 
         payload = {"nzbfile": (path_name.split("/")[-1], nzb_content)}
         params = {"mode": "addfile"}
+        if category:
+            params["cat"] = category
+        if password:
+            params["password"] = password
+        
         response = await self.client.post(
             self.SABNZBD_API, params=params, files=payload)
         
         return response.json()
 
-    async def add_nzburl(self, nzburl):
+    async def add_nzburl(self, nzburl, category: str=None):
         params = {"mode": "addurl", "name": nzburl}
-        response = await self.client.post(self.SABNZBD_API, params=params)
-        return response.json()
-      
-    async def add_nzburlcat(self, nzburl, category):
-        params = {"mode": "addurl", "name": nzburl, "cat": category}
+        if category:
+            params["cat"] = category
         response = await self.client.post(self.SABNZBD_API, params=params)
         return response.json()
 
@@ -483,29 +486,47 @@ class Usenet(commands.Cog):
 
     @commands.command()
     @cog_check()
-    async def nzbmirror(self,ctx:commands.Context):
+    async def nzbmirror(self,ctx:commands.Context,*,params:str=None):
         attachments = ctx.message.attachments
         if len(attachments) == 0:
             return await ctx.send('Please send one or multiple .nzb files along with this command.')
         
+        params = params.strip().split()
+        
+        is_pack = False
+        password = None
+        if params:
+            if params[0] == "-p":
+                is_pack = True
+            password_param = [param for param in params if param.startswith("--pass=")]
+            if password_param:
+                password = password_param[0].split("=")[1]
+                logger.info(f'Password was given for mirror command: {password}')
+                
         any_one_added = False
+        files_added = []
         for nzb_file in attachments:
             if not nzb_file.filename.endswith('.nzb'):
                 await ctx.send(f'`{nzb_file.filename}` is not a .nzb file')
                 continue
-            reply_msg = await ctx.reply('Adding nzb file please wait....',mention_author=False)
+            reply_msg = await ctx.reply('Adding nzb file(s) please wait....', mention_author=False)
             await nzb_file.save(fp=f'nzbfiles/{nzb_file.filename}')
 
-            res = await self.usenetbot.add_nzbfile(f'nzbfiles/{nzb_file.filename}')
+            if is_pack:
+                res = await self.usenetbot.add_nzbfile(f'nzbfiles/{nzb_file.filename}', sabnzbd_pack_category)
+            else:
+                res = await self.usenetbot.add_nzbfile(f'nzbfiles/{nzb_file.filename}')
             logger.info(f'{ctx.author.name} ({ctx.author.id}) added nzb file ({nzb_file.filename}) which resulted in {"success" if res["status"] else "failure"}')
             if res['status']:
-                sabnzbd_userid_log.setdefault(ctx.author.id, []).append(res["nzo_ids"][0])
                 any_one_added = True
-                await reply_msg.edit(content=f"Your NZB file `{nzb_file.filename}` is successfuly Added in Queue.")
+                sabnzbd_userid_log.setdefault(ctx.author.id, []).append(res["nzo_ids"][0])
+                files_added.append(nzb_file.filename)
             else:
-                reply_msg.edit(content=f"Something went wrong while processing your NZB file `{nzb_file.filename}`.")
+                return await reply_msg.edit(content=f"Something went wrong while processing your NZB file `{nzb_file.filename}`. Ignoring other attachments.")
+              
+        formatted_file_names = "\n".join(["`" + s + "`" for s in files_added])
         if any_one_added:
-            asyncio.create_task(self.usenetbot.show_downloading_status(self.bot,ctx.channel.id, ctx.message))
+            return await reply_msg.edit(content=f"**Following files were added to queue by uploading:\n{formatted_file_names}\nAdded by: <@{ctx.message.author.id}>\n(To view status send `{prefix}status`.)**")
 
     @commands.command(aliases=['nzbgrab','nzbadd','grab'])
     @cog_check()
@@ -515,7 +536,7 @@ class Usenet(commands.Cog):
         nzbids = nzbids.strip()
         nzbhydra_idlist = nzbids.split(" ")
         if not nzbhydra_idlist:
-            return await ctx.send("Please provide a proper ID.")
+            return await ctx.send("No IDs were sent. Please provide a proper ID.")
         replymsg = await ctx.reply("Adding your requested ID(s). Please Wait...", mention_author=False)
         success_taskids = []
         is_pack = False
@@ -525,16 +546,16 @@ class Usenet(commands.Cog):
         for id in nzbhydra_idlist:
             # Make sure that we are getting a number and not letters..
             if id.startswith("-"):
-                if not id.split("-")[1].isnumeric():
-                    return await ctx.send("Please provide a proper ID.")
+                if not id[1:].isnumeric():
+                    return await ctx.send(f"`{id}` is invalid. Please provide a proper ID.")
             elif not id.isnumeric():
-                return await ctx.send("Please provide a proper ID.")
+                return await ctx.send(f"`{id}` is invalid. Please provide a proper ID.")
             
             nzburl = NZBHYDRA_URL_ENDPOINT.replace("replace_id", id)
             response = requests.get(nzburl)
             if "Content-Disposition" in response.headers:
                 if is_pack:
-                    result = await self.usenetbot.add_nzburlcat(nzburl, "pack")
+                    result = await self.usenetbot.add_nzburl(nzburl, sabnzbd_pack_category)
                 else:
                     result = await self.usenetbot.add_nzburl(nzburl)
                 logger.info(f'[GET] {ctx.author.name} ({ctx.author.id}) added nzb id ({id}) which resulted in {"success" if result["status"] else "failure"} | {result} | 2')   
