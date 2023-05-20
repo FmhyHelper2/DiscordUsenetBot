@@ -175,11 +175,9 @@ class UsenetHelper:
                         task = await asyncio.wait_for(self.get_task(task_id), timeout=20)
                         if task:
                             file_name = task[0]["filename"]
-                        else:
-                            break  # Exit the inner loop if task is None
                     except asyncio.TimeoutError:
                         logger.info(f"Timeout 2 done")
-                        break  # Timeout occurred, exit the inner loop
+                        break
                 if not re.search(r"(http|https)", file_name):
                     file_names.append(file_name)
         return file_names
