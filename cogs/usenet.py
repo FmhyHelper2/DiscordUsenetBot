@@ -160,12 +160,12 @@ class UsenetHelper:
         file_names = []
         for task_id in task_ids:
             task = await self.get_task(task_id)
-            while not task:
-                try:
-                    task = await asyncio.wait_for(self.get_task(task_id), timeout=30)
-                except asyncio.TimeoutError:
-                    logger.info(f"Timeout 1 done")
-                    break
+            # while not task:
+            #     try:
+            #         task = await asyncio.wait_for(self.get_task(task_id), timeout=30)
+            #     except asyncio.TimeoutError:
+            #         logger.info(f"Timeout 1 done")
+            #         break
             logger.info(f"recieved task: {task}")
             if task:
                 file_name = task[0]['filename']
@@ -589,11 +589,13 @@ class Usenet(commands.Cog):
             # TODO: Find a better way and more dynamic way to handle it.
             await asyncio.sleep(10)
             file_names = await self.usenetbot.get_file_names(success_taskids)
-            logger.info(f'file_names={file_names}')
-            formatted_file_names = "\n".join(
-                ["`" + s + "`" for s in file_names])
-
-            return await replymsg.edit(content=f"**Following files were added to queue:\n{formatted_file_names}\nAdded by: <@{ctx.message.author.id}>\n(To view status send `{prefix}status`.)**")
+            if file_names:
+                logger.info(f'file_names={file_names}')
+                formatted_file_names = "\n".join(
+                    ["`" + s + "`" for s in file_names])
+                return await replymsg.edit(content=f"**Following files were added to queue:\n{formatted_file_names}\nAdded by: <@{ctx.message.author.id}>\n(To view status send `{prefix}status`.)**")
+            else:
+                return await replymsg.edit(content=f"**No files were added to the queue.\n<@{ctx.message.author.id}>\n(To view status send `{prefix}status`.)**")
 
         return await replymsg.edit(content="No task has been added.")
 
