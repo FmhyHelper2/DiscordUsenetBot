@@ -160,18 +160,19 @@ class UsenetHelper:
         file_names = []
         for task_id in task_ids:
             task = await self.get_task(task_id)
-            # while not task:
-            #     try:
-            #         task = await asyncio.wait_for(self.get_task(task_id), timeout=30)
-            #     except asyncio.TimeoutError:
-            #         logger.info(f"Timeout 1 done")
-            #         break
+            while not task:
+                try:
+                    task = await asyncio.wait_for(self.get_task(task_id), timeout=20)
+                except asyncio.TimeoutError:
+                    logger.info(
+                        f"Timeout 1 done, we could not find task with specified ID.")
+                    break
             logger.info(f"recieved task: {task}")
             if task:
                 file_name = task[0]['filename']
                 while re.search(r"(http|https)", file_name):
                     try:
-                        task = await asyncio.wait_for(self.get_task(task_id), timeout=30)
+                        task = await asyncio.wait_for(self.get_task(task_id), timeout=20)
                         if task:
                             file_name = task[0]["filename"]
                         else:
@@ -181,7 +182,6 @@ class UsenetHelper:
                         break  # Timeout occurred, exit the inner loop
                 if not re.search(r"(http|https)", file_name):
                     file_names.append(file_name)
-        logger.info(f"File names retrieved: {file_names}")
         return file_names
 
     async def check_task(self, task_id):
@@ -587,10 +587,10 @@ class Usenet(commands.Cog):
                 ctx.author.id, []).extend(success_taskids)
             # This is to make sure the nzb's have been added to sabnzbd
             # TODO: Find a better way and more dynamic way to handle it.
-            await asyncio.sleep(10)
+            await asyncio.sleep(5)
             file_names = await self.usenetbot.get_file_names(success_taskids)
             if file_names:
-                logger.info(f'file_names={file_names}')
+                logger.info(f"Retrieved file name(s): {file_names}")
                 formatted_file_names = "\n".join(
                     ["`" + s + "`" for s in file_names])
                 return await replymsg.edit(content=f"**Following files were added to queue:\n{formatted_file_names}\nAdded by: <@{ctx.message.author.id}>\n(To view status send `{prefix}status`.)**")
