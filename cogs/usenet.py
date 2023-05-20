@@ -548,7 +548,7 @@ class Usenet(commands.Cog):
         if not nzbids:
             return await ctx.send(f'Please also send a nzb id to grab ... `{ctx.prefix}grab 5501963429970569893`\nYou can also send multiple ids in one go. Just partition them with a space.')
         nzbids = nzbids.strip()
-        nzbhydra_idlist = nzbids.split(" ")
+        nzbhydra_idlist = nzbids.split()
         if not nzbhydra_idlist:
             return await ctx.send("No IDs were sent. Please provide a proper ID.")
         replymsg = await ctx.reply("Adding your requested ID(s). Please Wait...", mention_author=False)
@@ -561,13 +561,15 @@ class Usenet(commands.Cog):
             # Make sure that we are getting a number and not letters..
             if id.startswith("-"):
                 if not id[1:].isnumeric():
-                    return await ctx.send(f"`{id}` is invalid. Please provide a proper ID.")
+                    await ctx.send(f"`{id}` is invalid. Please provide a proper ID.")
+                    continue
             elif not id.isnumeric():
-                return await ctx.send(f"`{id}` is invalid. Please provide a proper ID.")
+                await ctx.send(f"`{id}` is invalid. Please provide a proper ID.")
+                continue
 
             nzburl = NZBHYDRA_URL_ENDPOINT.replace("replace_id", id)
             try:
-                response = requests.get(nzburl, timeout=15)
+                response = requests.get(nzburl)
                 if "Content-Disposition" in response.headers:
                     result = await self.usenetbot.add_nzburl(nzburl, sabnzbd_pack_category if is_pack else None)
                     logger.info(
