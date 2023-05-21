@@ -9,20 +9,20 @@ It was ported to discord.py by [jsmsj](https://github.com/jsmsj), and was modifi
 
 ## Bot commands
 
-`>search [search_term]` - Searches Indexers.
-`>search movie OR movies [imdbId]` - Searches for a movie with imdbId.
-`>search series OR tv [imdbId]` - Searches for a tv show with tvmazeId(if it could be found) or else will use the imdbId.
-
-`>grab [ID] [ID] [ID]` - Grabs the file to download (allows multiple IDs separated by space and remember to add "-" if it's there).
-`>grab -p [ID]` - Use this **ONLY** if you are grabbing packs like courses, tv show packs.
-
-`>nzbmirror` - Use this if you want to upload your own nzb and mirror it using the bot, make sure **that the file is sent as an attachment** and you use the command in the caption.
-`>nzbmirror --pass=password` - Use this **ONLY** if the nzb uploaded doesn't have the password embed in it.
-
-`>status` - Shows the downloading queue.
-`>pause [NZB-ID]` - Pauses the file in the queue.
-`>resume [NZB-ID]` - Resumes the file in the queue.
-`>delete [TASK-ID]` - Deletes the file from the queue.
+`>search [search_term]` - Searches Indexers.  
+`>search movie OR movies [imdbId]` - Searches for a movie with imdbId.  
+`>search series OR tv [imdbId]` - Searches for a tv show with tvmazeId(if it could be found) or else will use the imdbId.  
+  
+`>grab [ID] [ID] [ID]` - Grabs the file to download (allows multiple IDs separated by space and remember to add "-" if it's there).  
+`>grab -p [ID]` - Use this **ONLY** if you are grabbing packs like courses, tv show packs.  
+  
+`>nzbmirror` - Use this if you want to upload your own nzb and mirror it using the bot, make sure **that the file is sent as an attachment** and you use the command in the caption.  
+`>nzbmirror --pass=password` - Use this **ONLY** if the nzb uploaded doesn't have the password embed in it.  
+  
+`>status` - Shows the downloading queue.  
+`>pause [NZB-ID]` - Pauses the file in the queue.  
+`>resume [NZB-ID]` - Resumes the file in the queue.  
+`>delete [TASK-ID]` - Deletes the file from the queue.  
 
 ---
 
