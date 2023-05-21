@@ -163,7 +163,7 @@ async def getTVMazeId(imdbId: str):
     url = f"https://api.tvmaze.com/lookup/shows?imdb={imdbId}"
     client = AsyncClient()
     try:
-        res = await client.get(url)
+        res = await client.get(url, follow_redirects=True)
         print(f"Res: {res}")
         print(f"Status code: {res.status_code}")
         print(f"Text: {res.text}")
