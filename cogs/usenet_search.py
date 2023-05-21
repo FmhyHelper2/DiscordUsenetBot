@@ -87,8 +87,8 @@ class UsenetSearch(commands.Cog):
                     output = await self.nzbhydra.imdb_series_search(user_input)
 
             elif imdbid := re.search(r".+(tt\d+)", user_input):
-                imdbidStr = imdbid.group(1)
                 try:
+                    imdbidStr = imdbid.group(1)
                     logger.info(
                         f'{ctx.author.name} ({ctx.author.id}) did a imdb series search for {user_input}')
                     tvmazeid = await hp.getTVMazeId(imdbidStr)
