@@ -15,14 +15,17 @@ import datetime
 DISCORD_NOTIFICATION_WEBHOOK_URL = ""
 SHOW_DRIVE_LINK = False
 
+
 def b64e(s):
     return base64.urlsafe_b64encode(s.encode()).decode()
 
-def encode_link(link,author):
+
+def encode_link(link, author):
     # https://links.gamesdrive.net/#/link/{base64}.{uploaderB64}
     e_link = b64e(link)
     e_author = b64e(author)
     return f"https://links.gamesdrive.net/#/link/{e_link}.{e_author}"
+
 
 # Takes all the parameters given by sabnzbd such as filename,  filepath etc.
 try:
@@ -48,12 +51,13 @@ except:
 # log file path of sabnzbd log.
 LOGFILE_PATH = "/home/master/.config/sabnzbd/logs/sabnzbd.log"
 
-#Rclone upload directory and flags.  
-RCLONE_REMOTE_NAME = "fc_contrib"
-RCLONE_DIRECTORY_NAME = "UsenetUpload/NoSort"  # leave empty if there isn't one.
+# Rclone upload directory and flags.
+RCLONE_REMOTE_NAME = "remote"
+# leave empty if there isn't one.
+RCLONE_DIRECTORY_NAME = "UsenetUpload/NoSort"
 if category == "movies":
     RCLONE_DIRECTORY_NAME = "UsenetUpload/Movies"
-elif category == "tv" or category == "tv_packs":
+elif category == "tv":
     RCLONE_DIRECTORY_NAME = "UsenetUpload/TV"
 RCLONE_UPLOAD_DIRECTORY = directory.split("/")[-1]
 if category == "tv":
@@ -62,7 +66,7 @@ DRIVE_UPLOAD_DIRECTORY = f"{RCLONE_REMOTE_NAME}:{RCLONE_DIRECTORY_NAME}/{RCLONE_
 
 no_of_transfers = 1
 drive_chunk_size = 256
-if category == "tv_packs":
+if category == "pack":
     no_of_transfers = 4
     drive_chunk_size = 64
 
@@ -73,7 +77,8 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(message)s",
     handlers=[
-        RotatingFileHandler(LOGFILE_PATH, mode="w+", maxBytes=5000000, backupCount=10),
+        RotatingFileHandler(LOGFILE_PATH, mode="w+",
+                            maxBytes=5000000, backupCount=10),
         logging.StreamHandler()])
 
 
@@ -94,6 +99,7 @@ def get_readable_bytes(size: str) -> str:
         raised_to_pow += 1
     return f"{str(round(size, 2))} {dict_power_n[raised_to_pow]}B"
 
+
 def convert_bytes_to_size(bytes: str) -> str:
     """
     Convert bytes (given as a string) to human-readable size in KB, MB, GB, or TB.
@@ -109,25 +115,26 @@ def convert_bytes_to_size(bytes: str) -> str:
     return f"{size:.2f} {sizes[idx]}"
 
 
-def webhook_notification(message:str):
+def webhook_notification(message: str):
     data = {
         "content": message,
         "embeds": None,
         "attachments": [],
-	      "username": "",
-    	  "avatar_url": ""
+        "username": "UsenetBot",
     }
     headers = {
         'Content-Type': 'application/json'
     }
-    
-    response:requests.Response = requests.post(DISCORD_NOTIFICATION_WEBHOOK_URL,headers=headers,json=data)
+
+    response: requests.Response = requests.post(
+        DISCORD_NOTIFICATION_WEBHOOK_URL, headers=headers, json=data)
 
     if response.status_code == 204:
         sys.exit(0)
 
     print("Something happened.....")
     sys.exit(1)
+
 
 def run_command(command):
     with subprocess.Popen(
@@ -143,7 +150,8 @@ def run_command(command):
                 LOGGER(__name__).info(f"Uploading to drive: {output}")
 
             if output == "" and proc.poll() is not None:
-                LOGGER(__name__).info("File has been successfully uploaded to gdrive.")
+                LOGGER(__name__).info(
+                    "File has been successfully uploaded to gdrive.")
                 break
 
 
@@ -159,8 +167,10 @@ reasons = {
 
 
 if str(postprocstatus) in reasons:
-    reason = reasons[postprocstatus]
-    notification_message = f"`📁 {jobname}`\n\n{reason} "
+    sab_fail_reason = os.environ['SAB_FAIL_MSG']
+    reason = sab_fail_reason if sab_fail_reason == "Duplicate NZB" else reasons[
+        postprocstatus]
+    notification_message = f"`❌ {jobname}`\n\n{reason} "
     webhook_notification(message=notification_message)
     sys.exit(1)
 
@@ -172,7 +182,8 @@ contains_prefix = False
 prefix = "_UNPACK_"
 for folder_name in os.listdir(directory):
     if folder_name.startswith(prefix) and os.path.isdir(os.path.join(directory, folder_name)):
-        LOGGER(__name__).info(f"Folder starting with {prefix} found: {folder_name}")
+        LOGGER(__name__).info(
+            f"Folder starting with {prefix} found: {folder_name}")
         contains_prefix = True
     else:
         path = os.path.join(directory, folder_name)
@@ -184,8 +195,8 @@ for folder_name in os.listdir(directory):
             LOGGER(__name__).info(f"Directory deleted: {path}")
 
 if not contains_prefix:
-  shutil.rmtree(directory)
-  LOGGER(__name__).info(f"Directory deleted: {directory}")
+    shutil.rmtree(directory)
+    LOGGER(__name__).info(f"Directory deleted: {directory}")
 try:
     file_size = os.environ["SAB_BYTES_DOWNLOADED"]
     file_size = get_readable_bytes(int(file_size))
@@ -205,7 +216,9 @@ if SHOW_DRIVE_LINK:
     drive_link = f'[Drive Link]({encode_link(drive_link,"SecretBot")})'
 
 
+if category == "*":
+    category = "Nosort"
 notification_message = (
-    f"`📁 {jobname}`\n\n{file_size} | Success |{drive_link}")
+    f"`📁 {jobname}`\n\n**{category.title()}** | {file_size} | Success |{drive_link}")
 
 webhook_notification(message=notification_message)

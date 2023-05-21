@@ -166,8 +166,6 @@ async def getTVMazeId(imdbId: str):
         res = await client.get(url, follow_redirects=True)
         print(f"Res: {res}")
         print(f"Status code: {res.status_code}")
-        print(f"Text: {res.text}")
-        print(f"Text: {res.json()}")
         if res.status_code == 200:
             return res.json()["id"]
         else:
