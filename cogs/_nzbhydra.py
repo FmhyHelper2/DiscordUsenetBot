@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 from loggerfile import logger
 
-from cogs._helpers import humanbytes,NZBHYDRA_ENDPOINT, NZBHYDRA_STATS_ENDPOINT,format_time_since
+from cogs._helpers import humanbytes, NZBHYDRA_ENDPOINT, NZBHYDRA_STATS_ENDPOINT, format_time_since
 
 
 class NzbHydra:
@@ -43,7 +43,7 @@ class NzbHydra:
             # Show how old the nzb was on indexer
             dt = datetime.strptime(result[3], '%a, %d %b %Y %H:%M:%S %z')
             time_str = format_time_since(dt)
-            
+
             ID = result[2]
 
             # if "-" in ID:
@@ -85,8 +85,15 @@ class NzbHydra:
         response = await self.client.get(
             self.NZBHYDRA_ENDPOINT, params={"t": "tvsearch", "imdbid": imdbid})
         logger.info(f'Searching (imdb series) for {imdbid}')
-        
+
         return self.parse_xml(response.text, imdbid)
+
+    async def tvmaze_series_search(self, tvmazeid):
+        response = await self.client.get(
+            self.NZBHYDRA_ENDPOINT, params={"t": "tvsearch", "tvmazeid": tvmazeid})
+        logger.info(f'Searching (tvmaze series) for {tvmazeid}')
+
+        return self.parse_xml(response.text, tvmazeid)
 
     async def list_indexers(self):
         response = await self.client.get(self.NZBHYDRA_STATS_ENDPOINT)
@@ -97,8 +104,7 @@ class NzbHydra:
             return None
 
         message = "List Of Indexers -\n\n```\n"
-        for i,indexer in enumerate(indexers_list):
+        for i, indexer in enumerate(indexers_list):
             message += f"{i+1}. {indexer}\n"
-        message+='\n```'
+        message += '\n```'
         return message
-

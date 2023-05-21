@@ -1,6 +1,6 @@
 
 import discord
-from datetime import datetime,timedelta,timezone
+from datetime import datetime, timedelta, timezone
 from cogs._config import *
 import requests
 from telegraph.aio import Telegraph
@@ -8,20 +8,24 @@ import sys
 from httpx import AsyncClient
 from discord.ext import commands
 
-def remove_private_stuff(txt:str):
+
+def remove_private_stuff(txt: str):
     for variable in all_variables:
-        txt = txt.replace(variable,'SECRET')
+        txt = txt.replace(variable, 'SECRET')
     return txt
 
-def embed(title,description): #,url=None
-    em = discord.Embed(title=title,description=description,color=discord.Color.green(),timestamp=datetime.now())
+
+def embed(title, description):  # ,url=None
+    em = discord.Embed(title=title, description=description,
+                       color=discord.Color.green(), timestamp=datetime.now())
     # em.set_footer(text="")
     # if url:
     #     btn = Button(label="Link",url=url)
     #     view = View()
     #     view.add_item(btn)
     #     return [em,view]
-    return [em,None]
+    return [em, None]
+
 
 def sudo_check():
     def predicate(ctx):
@@ -38,6 +42,7 @@ NZBHYDRA_ENDPOINT = f"{HYDRA_URL}/api?apikey={HYDRA_API_KEY}"
 NZBHYDRA_URL_ENDPOINT = f"{HYDRA_URL}/getnzb/api/replace_id?apikey={HYDRA_API_KEY}"
 NZBHYDRA_STATS_ENDPOINT = f"{HYDRA_URL}/api/stats?apikey={HYDRA_API_KEY}"
 
+
 def check_before_starting(service):
     if service.lower() == 'sabnzbd':
         response = requests.get(SABNZBD_ENDPOINT, timeout=20)
@@ -47,6 +52,7 @@ def check_before_starting(service):
         response.raise_for_status()
         if "Wrong api key" in response.text:
             raise ValueError("Wrong API value in configs.")
+
 
 def humanbytes(size: int) -> str:
     if not size:
@@ -77,16 +83,17 @@ async def katbin_paste(text: str) -> str:
     try:
         paste_post = await client.post(
             katbin_url,
-            json={"paste": {"content": f"{text}"}},timeout=None)
-        
+            json={"paste": {"content": f"{text}"}}, timeout=None)
+
         paste_post = paste_post.json()
-        
+
         output_url = "https://katb.in/{}".format(paste_post["id"])
-        
+
         await client.aclose()
         return output_url
     except:
         return "something went wrong while pasting text in katb.in."
+
 
 async def telegraph_paste(content: str, title="FC Usenet Bot") -> str:
     """
@@ -106,8 +113,10 @@ async def telegraph_paste(content: str, title="FC Usenet Bot") -> str:
 
     try:
         await telegraph.revoke_access_token()
-    except: pass
+    except:
+        pass
     return response
+
 
 def humantime(seconds):
     result = ""
@@ -131,16 +140,30 @@ def humantime(seconds):
     result += f"{seconds}s "
     return result
 
+
 def humantime2(seconds):
     time_str = str(timedelta(seconds=seconds))
     return time_str.split('.')[0]
-  
+
+
 def days_hours_minutes(td):
-    return td.days, td.seconds//3600, (td.seconds//60)%60
-  
+    return td.days, td.seconds//3600, (td.seconds//60) % 60
+
+
 def format_time_since(dt_obj):
     now = datetime.now(timezone.utc)
     diff = now - dt_obj
     time_tuple = days_hours_minutes(diff)
-    time_str = f"{time_tuple[0]}d" if time_tuple[0] > 0 else f"{time_tuple[1]}h" if time_tuple[1] > 0 else  f"{time_tuple[2]}m"
+    time_str = f"{time_tuple[0]}d" if time_tuple[0] > 0 else f"{time_tuple[1]}h" if time_tuple[1] > 0 else f"{time_tuple[2]}m"
     return time_str
+
+
+async def getTVMazeId(imdbId: str) -> str:
+    # https://api.tvmaze.com/lookup/shows?imdb=tt0944947
+    url = f"https://api.tvmaze.com/lookup/shows?imdb={imdbId}"
+    client = AsyncClient()
+    res = await client.get(url)
+    if res:
+        return res.json()["id"]
+    else:
+        return None
