@@ -34,9 +34,9 @@ It was ported to discord.py by [jsmsj](https://github.com/jsmsj), and was modifi
 2. For sabnzbd, you will have to make sure you have a **category with the name `pack`** so that the `-p` will be used when grabbing packs.
 3. Search for `Post-Process Only Verified Jobs` in **sabnzbd settings** and untick it.
 4. Search for `Deobfuscate final filenames` in **sabnzbd settings** and put a tick it.
-5. For **sabnzbd sorting** you can use the following strings:
-   movies: `%title (%y)/%dn.%ext`
-   tv shows: `%sn (%y)/Season %s/%dn.%ext`
+5. For **sabnzbd sorting** you can use the following strings:  
+   movies: `%title (%y)/%dn.%ext`  
+   tv shows: `%sn (%y)/Season %s/%dn.%ext`  
    **Note:** This will always make sure that the final name of the files will be the same as nzb name.
 
 ### Docker deployment
