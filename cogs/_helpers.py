@@ -158,12 +158,15 @@ def format_time_since(dt_obj):
     return time_str
 
 
-async def getTVMazeId(imdbId: str) -> str:
+async def getTVMazeId(imdbId: str):
     # https://api.tvmaze.com/lookup/shows?imdb=tt0944947
     url = f"https://api.tvmaze.com/lookup/shows?imdb={imdbId}"
     client = AsyncClient()
-    res = await client.get(url)
-    if res:
-        return res.json()["id"]
-    else:
+    try:
+        res = await client.get(url)
+        if res.status_code == 200:
+            return res.json()["id"]
+        else:
+            return None
+    except:
         return None

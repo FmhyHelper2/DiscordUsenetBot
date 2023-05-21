@@ -73,6 +73,7 @@ class UsenetSearch(commands.Cog):
                 output = await self.nzbhydra.movie_search(user_input)
 
         elif cmd in ["series", "tv"]:
+            logger.info(f'search for: {cmd} {user_input}')
             if re.search("^tt[0-9]*$", user_input):
                 logger.info(
                     f'{ctx.author.name} ({ctx.author.id}) did a imdb series search for {user_input}')
