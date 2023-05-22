@@ -3,8 +3,9 @@ from discord.ext import commands
 import discord
 import os
 import cogs._config
-import os,sys
-from cogs._helpers import embed,check_before_starting,sudo_check
+import os
+import sys
+from cogs._helpers import embed, check_before_starting, sudo_check
 import traceback
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import asyncio
@@ -13,35 +14,40 @@ from loggerfile import logger
 
 intents = discord.Intents.all()
 
-bot = commands.Bot(command_prefix=cogs._config.prefix, intents=intents, case_insensitive=True) 
+bot = commands.Bot(command_prefix=cogs._config.prefix,
+                   intents=intents, case_insensitive=True)
 
 logger.info("Starting Apscheduler...")
 scheduler = AsyncIOScheduler()
 scheduler.start()
+
 
 @bot.event
 async def on_ready():
     await bot.change_presence(activity=discord.Game(name="Usenet x Discord"))
     print("Bot is ready!")
 
+
 @bot.event
-async def on_command_error(ctx:commands.Context,error):
+async def on_command_error(ctx: commands.Context, error):
     if hasattr(ctx.command, 'on_error'):
         return
-    if isinstance(error,commands.CommandNotFound):
+    if isinstance(error, commands.CommandNotFound):
         return
-    if isinstance(error,commands.CheckFailure):
-        logger.info(f'{ctx.author.name} ({ctx.author.id}) ran {ctx.command.name} but was unable to run it due to checkfailure.')
+    if isinstance(error, commands.CheckFailure):
+        logger.info(
+            f'{ctx.author.name} ({ctx.author.id}) ran {ctx.command.name} but was unable to run it due to checkfailure.')
         return await ctx.send('Cannot use this command here.... or you are not authorised to run this command.')
     else:
-        logger.warning(error,exc_info=True)
-        logger.warning(traceback.format_exc())
-        _file=None
+        logger.exception(
+            'An exception occurred during command execution:', exc_info=error)
+        _file = None
         if os.path.exists('log.txt'):
             _file = discord.File('log.txt')
         user = await bot.fetch_user(f'{cogs._config.SUDO_USERIDS[0]}')
-        await user.send(embed=embed(f'Error | {ctx.command.name}',f'An error occured.\n```py\n{error}\n```\nHere is the attached logfile.')[0],file=_file)
+        await user.send(embed=embed(f'Error | {ctx.command.name}', f'An error occured.\n```py\n{error}\n```\nHere is the attached logfile.')[0], file=_file)
         await ctx.send(content="An error occured. \nReport sent to sudo user.")
+
 
 @bot.command(description="Shows the bot's latency")
 async def ping(ctx):
@@ -53,18 +59,17 @@ async def ping(ctx):
 async def log(ctx):
     if os.path.exists('log.txt'):
         user = await bot.fetch_user(f'{cogs._config.SUDO_USERIDS[0]}')
-        await user.send(embed=embed('📃 Log File','Here is the log file')[0],file=discord.File('log.txt'))
+        await user.send(embed=embed('📃 Log File', 'Here is the log file')[0], file=discord.File('log.txt'))
         await ctx.send(content="Log file sent successfully to sudo dm!")
     else:
-        await ctx.send(embed=embed('📃 Log File','No logfile found :(')[0])
-
+        await ctx.send(embed=embed('📃 Log File', 'No logfile found :(')[0])
 
 
 async def run_main():
     for file in os.listdir("cogs/"):
         if file.endswith(".py") and not file.startswith("_"):
             await bot.load_extension(f"cogs.{file[:-3]}")
-    
+
     await bot.load_extension('jishaku')
     # CHECKS:
     logger.info('Cheking SABNZBD config....')

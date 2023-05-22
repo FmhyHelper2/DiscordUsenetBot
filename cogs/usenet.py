@@ -4,7 +4,7 @@ import requests
 from discord.ext import commands
 from main import BotStartTime, scheduler
 from loggerfile import logger
-from cogs._helpers import SABNZBD_ENDPOINT, humantime, humanbytes, sudo_check, NZBHYDRA_ENDPOINT, NZBHYDRA_STATS_ENDPOINT, NZBHYDRA_URL_ENDPOINT, remove_private_stuff
+from cogs._helpers import SABNZBD_ENDPOINT, humantime, sudo_check, NZBHYDRA_URL_ENDPOINT, remove_private_stuff, embed
 import httpx
 import psutil
 import time
@@ -559,11 +559,11 @@ class Usenet(commands.Cog):
             # Make sure that we are getting a number and not letters..
             if id.startswith("-"):
                 if not id[1:].isnumeric():
-                    await ctx.send(f"`{id}` is invalid. Please provide a proper ID.")
-                    continue
+                    await ctx.send(f"`{id}` is invalid. Please provide a proper ID. Ignoring other inputs.")
+                    break
             elif not id.isnumeric():
-                await ctx.send(f"`{id}` is invalid. Please provide a proper ID.")
-                continue
+                await ctx.send(f"`{id}` is invalid. Please provide a proper ID. Ignoring other inputs.")
+                break
 
             nzburl = NZBHYDRA_URL_ENDPOINT.replace("replace_id", id)
             try:
@@ -579,7 +579,13 @@ class Usenet(commands.Cog):
                         f'{ctx.author.name} ({ctx.author.id}) added nzb id ({id}) which resulted in failure due getting Retry-After.')
                     await ctx.send(f'Unable to add {id} , got a retry after message. Retry after {str(response.headers.get("Retry-After"))} seconds <t:{round(datetime.datetime.now().timestamp()+int(response.headers.get("Retry-After")))}:R>')
                 else:
-                    await ctx.send(f'Some error has occured. \n Details: ```\n{remove_private_stuff(str(nzburl))}\n\n{remove_private_stuff(str(response.content))}\n\n{remove_private_stuff(str(response.headers))}```')
+                    if "outdated search result ID" in str(response.content).lower():
+                        await ctx.send(f"`{id}` is invalid. Please provide a proper ID. Ignoring other inputs.")
+                        break
+                    else:
+                        logger.info(
+                            f'Some error has occured. \n Details: ```\n{remove_private_stuff(str(nzburl))}\n\n{remove_private_stuff(str(response.content))}\n\n{remove_private_stuff(str(response.headers))}```')
+                        await ctx.send(content=f"An error occured while adding {id}. \nReport sent to sudo user.")
             except requests.RequestException as e:
                 logger.info(f"An error occurred during the request: {str(e)}")
         if success_taskids:
