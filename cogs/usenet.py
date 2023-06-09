@@ -502,7 +502,8 @@ class Usenet(commands.Cog):
         if len(attachments) == 0:
             return await ctx.send('Please send one or multiple .nzb files along with this command.')
 
-        params = params.strip().split()
+        if params:
+            params = params.strip().split()
 
         is_pack = False
         password = None
