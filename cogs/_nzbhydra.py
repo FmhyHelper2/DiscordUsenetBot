@@ -58,41 +58,45 @@ class NzbHydra:
         return None
 
     async def query_search(self, query):
+        logger.info(f'Searching for {query}')
         response = await self.client.get(
             self.NZBHYDRA_ENDPOINT, params={"t": "search", "q": query})
-        logger.info(f'Searching (nzb_id) for {query}')
+        logger.info(f'Done searching for {query}!')
         return self.parse_xml(response.text, query)
 
     async def movie_search(self, query):
+        logger.info(f'Searching (movie) for {query}')
         response = await self.client.get(
             self.NZBHYDRA_ENDPOINT, params={"t": "movie", "q": query})
-        logger.info(f'Searching (movie) for {query}')
+        logger.info(f'Done searching (movie) for {query}!')
         return self.parse_xml(response.text, query)
 
     async def series_search(self, query):
+        logger.info(f'Searching (series) for {query}')
         response = await self.client.get(
             self.NZBHYDRA_ENDPOINT, params={"t": "tvsearch", "q": query})
-        logger.info(f'Searching (series) for {query}')
+        logger.info(f'Done searching (series) for {query}!')
         return self.parse_xml(response.text, query)
 
     async def imdb_movie_search(self, imdbid):
+        logger.info(f'Searching (imdb movie) for {imdbid}')
         response = await self.client.get(
             self.NZBHYDRA_ENDPOINT, params={"t": "movie", "imdbid": imdbid})
-        logger.info(f'Searching (imdb movie) for {imdbid}')
+        logger.info(f'Done searching (imdb movie) for {imdbid}!')
         return self.parse_xml(response.text, imdbid)
 
     async def imdb_series_search(self, imdbid):
+        logger.info(f'Searching (imdb series) for {imdbid}')
         response = await self.client.get(
             self.NZBHYDRA_ENDPOINT, params={"t": "tvsearch", "imdbid": imdbid})
-        logger.info(f'Searching (imdb series) for {imdbid}')
-
+        logger.info(f'Done searching (imdb series) for {imdbid}')
         return self.parse_xml(response.text, imdbid)
 
     async def tvmaze_series_search(self, tvmazeid):
+        logger.info(f'Searching (tvmaze series) for {tvmazeid}')
         response = await self.client.get(
             self.NZBHYDRA_ENDPOINT, params={"t": "tvsearch", "tvmazeid": tvmazeid})
-        logger.info(f'Searching (tvmaze series) for {tvmazeid}')
-
+        logger.info(f'Done searching (tvmaze series) for {tvmazeid}')
         return self.parse_xml(response.text, tvmazeid)
 
     async def list_indexers(self):

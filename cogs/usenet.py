@@ -592,6 +592,8 @@ class Usenet(commands.Cog):
         if success_taskids:
             sabnzbd_userid_log.setdefault(
                 ctx.author.id, []).extend(success_taskids)
+            await replymsg.edit(content=f"Added successfully!\nWaiting to get file names...")
+            
             # This is to make sure the nzb's have been added to sabnzbd
             # TODO: Find a better way and more dynamic way to handle it.
             await asyncio.sleep(5)
