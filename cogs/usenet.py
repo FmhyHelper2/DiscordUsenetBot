@@ -188,7 +188,9 @@ class UsenetHelper:
 
         for task_id in task_ids:
             try:
-                task = await asyncio.wait_for(self.get_task(task_id), timeout=20)
+                task = None
+                while not task:
+                    task = await asyncio.wait_for(self.get_task(task_id), timeout=20)
             except asyncio.TimeoutError:
                 logger.info(f"Timeout occurred. Could not find task with specified ID: {task_id}")
                 continue
