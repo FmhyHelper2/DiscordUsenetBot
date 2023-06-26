@@ -10,10 +10,12 @@ from loggerfile import logger
 
 
 def cog_check():
-    def predicate(ctx):
+    def predicate(ctx: commands.Context):
         if len(AUTHORIZED_CHANNELS_LIST) == 0:
             return True
         if ctx.message.channel.id in AUTHORIZED_CHANNELS_LIST:
+            return True
+        elif ctx.author.id == SUDO_USERIDS[0]:
             return True
         else:
             return False
@@ -37,6 +39,9 @@ class UsenetSearch(commands.Cog):
     @commands.command()
     @cog_check()
     async def search(self, ctx: commands.Context, cmd: str = '', *, user_input: str = ''):
+        """Search for a keyword on indexers.
+        eg: `
+        """
         commands = ['nzbfind', 'nzbsearch', 'movie', 'movies', "series", "tv"]
         if not cmd:
             return await ctx.send(f'No search term provided. Correct Usage: `{ctx.prefix}search command your query` where command can be: `{" , ".join(commands)}`')

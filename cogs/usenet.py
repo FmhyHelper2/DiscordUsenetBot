@@ -17,7 +17,8 @@ import asyncio
 
 downloading_status_msgids = {}
 sabnzbd_pack_category = "pack"
-sabnzbd_userid_log = TTLCache(maxsize=128, ttl=600)
+# cache user and sabid for 30 mins
+sabnzbd_userid_log = TTLCache(maxsize=128, ttl=30 * 60)
 
 
 class UsenetHelper:
@@ -155,20 +156,44 @@ class UsenetHelper:
 
         return '', status_embed
 
+    # async def get_file_names(self, task_ids):
+    #     logger.info(f"Recieved get_file_names({task_ids})")
+    #     file_names = []
+    #     for task_id in task_ids:
+    #         task = await self.get_task(task_id)
+    #         while not task:
+    #             try:
+    #                 task = await asyncio.wait_for(self.get_task(task_id), timeout=20)
+    #             except asyncio.TimeoutError:
+    #                 logger.info(
+    #                     f"Timeout 1 done, we could not find task with specified ID.")
+    #                 break
+    #         logger.info(f"recieved task: {task}")
+    #         if task:
+    #             file_name = task[0]['filename']
+    #             while re.search(r"(http|https)", file_name):
+    #                 try:
+    #                     task = await asyncio.wait_for(self.get_task(task_id), timeout=20)
+    #                     if task:
+    #                         file_name = task[0]["filename"]
+    #                 except asyncio.TimeoutError:
+    #                     logger.info(f"Timeout 2 done")
+    #                     break
+    #             if not re.search(r"(http|https)", file_name):
+    #                 file_names.append(file_name)
+    #     return file_names
     async def get_file_names(self, task_ids):
-        logger.info(f"Recieved get_file_names({task_ids})")
+        logger.info(f"Received get_file_names({task_ids})")
         file_names = []
+
         for task_id in task_ids:
-            task = await self.get_task(task_id)
-            while not task:
-                try:
-                    task = await asyncio.wait_for(self.get_task(task_id), timeout=20)
-                except asyncio.TimeoutError:
-                    logger.info(
-                        f"Timeout 1 done, we could not find task with specified ID.")
-                    break
-            logger.info(f"recieved task: {task}")
-            if task:
+            try:
+                task = await asyncio.wait_for(self.get_task(task_id), timeout=20)
+            except asyncio.TimeoutError:
+                logger.info(f"Timeout occurred. Could not find task with specified ID: {task_id}")
+                continue
+
+            while task:
                 file_name = task[0]['filename']
                 while re.search(r"(http|https)", file_name):
                     try:
@@ -176,11 +201,16 @@ class UsenetHelper:
                         if task:
                             file_name = task[0]["filename"]
                     except asyncio.TimeoutError:
-                        logger.info(f"Timeout 2 done")
+                        logger.info(f"Timeout occurred while retrieving file name.")
                         break
+
                 if not re.search(r"(http|https)", file_name):
                     file_names.append(file_name)
+
+                break  # Exit the while loop after processing the task
+
         return file_names
+
 
     async def check_task(self, task_id):
         response = await self.client.get(
@@ -360,10 +390,12 @@ class UsenetHelper:
 
 
 def cog_check():
-    def predicate(ctx):
+    def predicate(ctx: commands.Context):
         if len(AUTHORIZED_CHANNELS_LIST) == 0:
             return True
         if ctx.message.channel.id in AUTHORIZED_CHANNELS_LIST:
+            return True
+        elif ctx.author.id == SUDO_USERIDS[0]:
             return True
         else:
             return False
@@ -601,14 +633,21 @@ class Usenet(commands.Cog):
             # This is to make sure the nzb's have been added to sabnzbd
             # TODO: Find a better way and more dynamic way to handle it.
             await asyncio.sleep(5)
-            file_names = await self.usenetbot.get_file_names(success_taskids)
-            if file_names:
-                logger.info(f"Retrieved file name(s): {file_names}")
-                formatted_file_names = "\n".join(
-                    ["`" + s + "`" for s in file_names])
-                return await replymsg.edit(content=f"**Following files were added to queue:\n{formatted_file_names}\nAdded by: <@{ctx.message.author.id}>\n(To view status send `{prefix}status`.)**")
-            else:
-                return await replymsg.edit(content=f"**No files were added to the queue.\n<@{ctx.message.author.id}>\n(To view status send `{prefix}status`.)**")
+            try:
+                file_names = await self.usenetbot.get_file_names(success_taskids)
+                if file_names:
+                    logger.info(f"Retrieved file name(s): {file_names}")
+                    formatted_file_names = "\n".join(
+                        ["`" + s + "`" for s in file_names])
+                    return await replymsg.edit(content=f"**Following files were added to queue:\n{formatted_file_names}\nAdded by: <@{ctx.message.author.id}>\n(To view status send `{prefix}status`.)**")
+                else:
+                    return await replymsg.edit(content=f"**No files were added to the queue.\n<@{ctx.message.author.id}>\n(To view status send `{prefix}status`.)**")
+            except Exception as e:
+                logger.exception('An error occurred while retrieving file names')
+                return await replymsg.edit(content="Error retrieving file names\nAdded by: <@{ctx.message.author.id}>")
+    # Handle the error accordingly (e.g., log the error, send an error message, etc.)
+    # You can choose to return an error message or take other appropriate actions.
+      
 
         return await replymsg.edit(content="No task has been added.")
 
